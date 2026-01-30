@@ -1,0 +1,96 @@
+#part 4 =>1
+CREATE TABLE Suppliers (
+    SupplierID   INT AUTO_INCREMENT PRIMARY KEY,
+    SupplierName VARCHAR(100) NOT NULL,
+    ContactNumber VARCHAR(20)
+);
+CREATE TABLE Products (
+    ProductID     INT AUTO_INCREMENT PRIMARY KEY,
+    ProductName   VARCHAR(100) NOT NULL,
+    Price         DECIMAL(10,2) NOT NULL,
+    StockQuantity INT NOT NULL,
+    SupplierID    INT,
+    FOREIGN KEY (SupplierID) REFERENCES Suppliers(SupplierID)
+);
+CREATE TABLE Sales (
+    SaleID     INT AUTO_INCREMENT PRIMARY KEY,
+    ProductID  INT NOT NULL,
+    Quantity   INT NOT NULL,
+    SaleDate   DATE NOT NULL,
+    FOREIGN KEY (ProductID) REFERENCES Products(ProductID)
+);
+#=========================================================
+#2
+ALTER TABLE Products ADD COLUMN Category VARCHAR(255);
+#=========================================================
+#3
+ALTER TABLE Products DROP COLUMN Category;
+#=========================================================
+#4
+ALTER TABLE Suppliers MODIFY COLUMN ContactNumber VARCHAR(15);
+#=========================================================
+#5 
+ALTER TABLE Products MODIFY COLUMN ProductName VARCHAR(100) NOT NULL;
+#=========================================================
+#6 a)
+INSERT INTO Suppliers (SupplierName, ContactNumber) VALUES ('FreshFoods', '01001234567');
+#b)
+INSERT INTO Products (ProductName, Price, StockQuantity, SupplierID);
+SELECT 'Milk',  15.00, 50, SupplierID FROM Suppliers WHERE SupplierName = 'FreshFoods'
+UNION ALL
+SELECT 'Bread', 10.00, 30, SupplierID FROM Suppliers WHERE SupplierName = 'FreshFoods'
+UNION ALL
+SELECT 'Eggs',  20.00, 40, SupplierID FROM Suppliers WHERE SupplierName = 'FreshFoods';
+# c)
+INSERT INTO Sales (ProductID, Quantity, SaleDate)
+SELECT p.ProductID, 2, '2025-05-20'
+FROM Products p WHERE p.ProductName = 'Milk';
+#=========================================================
+#7
+UPDATE Products
+SET Price = 25.00 WHERE ProductName = 'Bread';
+#=========================================================
+#8
+DELETE FROM Products WHERE ProductName = 'Eggs';
+#=========================================================
+#9
+SELECT 
+    p.ProductName,
+    COALESCE(SUM(s.Quantity), 0) AS TotalSold
+FROM Products p
+LEFT JOIN Sales s ON p.ProductID = s.ProductID
+GROUP BY p.ProductID, p.ProductName
+ORDER BY TotalSold DESC;
+#=========================================================
+#10
+SELECT ProductName, StockQuantity FROM Products ORDER BY StockQuantity DESC LIMIT 1;
+#=========================================================
+#11
+SELECT * FROM Suppliers WHERE SupplierName LIKE 'F%';
+#=========================================================
+#12
+SELECT p.ProductName, p.StockQuantity FROM Products p LEFT JOIN Sales s ON p.ProductID = s.ProductID
+WHERE s.ProductID IS NULL;
+#=========================================================
+#13
+SELECT 
+    s.SaleID,
+    p.ProductName,
+    s.Quantity,
+    s.SaleDate
+FROM Sales s
+JOIN Products p ON s.ProductID = p.ProductID
+ORDER BY s.SaleDate DESC;
+#=========================================================
+#14
+CREATE USER 'store_manager'@'localhost' IDENTIFIED BY '';
+GRANT SELECT, INSERT, UPDATE ON small_retail_store. * TO 'store_manager'@'localhost';
+#=========================================================
+#15
+REVOKE UPDATE ON smalll_retail_store.* FROM 'store_manager'@'localhost';
+#=========================================================
+#16
+GRANT DELETE 
+ON small_retail_store.Sales 
+TO 'store_manager'@'localhost';
+FLUSH PRIVILEGES;
